@@ -1,6 +1,6 @@
 import fsPromises from 'node:fs/promises';
 
-// ------LEVEL 1 & 2 -----------------------------------
+// ------LEVEL 1 -----------------------------------
 
 // async function main() {
 //     const response = await fetch('https://jsonplaceholder.typicode.com/posts')
@@ -27,15 +27,23 @@ import fsPromises from 'node:fs/promises';
 
 // createBackup();
 
+// ------LEVEL 2 -----------------------------------
+
 async function saveJSONComments() {
-
-    const postID = 1;
-
-    const request = await fetch(`https://jsonplaceholder.typicode.com/comments?${postID}`)
+    // fetch the first time to get the main object and preparing for mapping
+    const request = await fetch(`https://jsonplaceholder.typicode.com/comments`)
     const comments = await request.json();
-    console.log(comments);
+    // start mapping of the whole json to filter the postId and get access to the specific comments
+    const promisesArray = comments.map(async (elt) => {
+        const postRequest = await fetch(`https://jsonplaceholder.typicode.com/posts/${elt.postId}/comments`)
+        const postComments = await postRequest.json();
+        console.log(postComments);
+        return postComments;
+    });
 
-    await fsPromises.writeFile('./data/comments.json', JSON.stringify(comments, null, 2));
+    await Promise.all(promisesArray);
+    // write all filtered comments in the comments.json which was created as a sub-folder from mainfolder 'data'
+    await fsPromises.writeFile('./data/comments.json', JSON.stringify(promisesArray, null, 2));
 }
 
 saveJSONComments();
